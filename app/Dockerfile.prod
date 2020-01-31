@@ -10,9 +10,9 @@ RUN apk update \
 
 RUN pip install --upgrade pip
 
-COPY . /usr/src/app/
+COPY app/ /usr/src/app/
 
-COPY requirements.txt .
+COPY app/requirements.txt .
 RUN pip wheel --no-cache-dir --no-deps --wheel-dir /usr/src/app/wheels -r requirements.txt
 
 
