@@ -5,7 +5,7 @@ services:
 
 
 variables:
-  DOCKER_FILE_PATH: app/Dockerfile.prod
+  DOCKER_FILE_PATH: /app/Dockerfile.prod
 
 before_script:
   - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
