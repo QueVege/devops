@@ -6,9 +6,6 @@ services:
 
 variables:
   DOCKER_FILE_PATH: app/Dockerfile.prod
-  CONTAINER_COMMIT_IMAGE: $CI_PROJECT_PATH:$CI_COMMIT_SHA
-  CONTAINER_RELEASE_IMAGE: $CI_PROJECT_PATH:$CI_COMMIT_TAG
-  CONTAINER_LATEST_IMAGE: $CI_PROJECT_PATH:latest
 
 before_script:
   - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
@@ -22,7 +19,7 @@ stages:
 build:
   stage: build
   script:
-    - docker build -f $DOCKER_FILE_PATH --cache-from $CONTAINER_LATEST_IMAGE --tag $CONTAINER_COMMIT_IMAGE .
+    - docker build -f $DOCKER_FILE_PATH -t $CI_REGISTRY/$CI_PROJECT_PATH .
   tags:
     - docker
 
@@ -36,10 +33,7 @@ test:
 push:
   stage: push
   script:
-    - docker tag $CONTAINER_COMMIT_IMAGE $CONTAINER_LATEST_IMAGE
-    - docker tag $CONTAINER_COMMIT_IMAGE $DOCKER_REGISTRY_URL/$CONTAINER_COMMIT_IMAGE
-    - docker tag $CONTAINER_LATEST_IMAGE $DOCKER_REGISTRY_URL/$CONTAINER_LATEST_IMAGE
-    - docker push $DOCKER_REGISTRY_URL/$CONTAINER_COMMIT_IMAGE
+    - docker push $CI_REGISTRY/$CI_PROJECT_PATH
   tags:
     - docker
 
@@ -56,7 +50,7 @@ deploy:
     - ssh-keyscan -H $DEPLOYMENT_SERVER_IP >> ~/.ssh/known_hosts 
   script:
     - ssh $DEPLOYMENT_SERVER_USERNAME@$DEPLOYMENT_SERVER_IP docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY 
-    - ssh $DEPLOYMENT_SERVER_USERNAME@$DEPLOYMENT_SERVER_IP docker pull $DOCKER_REGISTRY_URL/$CONTAINER_COMMIT_IMAGE
+    - ssh $DEPLOYMENT_SERVER_USERNAME@$DEPLOYMENT_SERVER_IP docker pull $CI_REGISTRY/$CI_PROJECT_PATH
     - ssh $DEPLOYMENT_SERVER_USERNAME@$DEPLOYMENT_SERVER_IP docker-compose -f $DOCKER_COMPOSE_FILE_PATH up -d $CI_PROJECT_NAME
   only:
     - master
