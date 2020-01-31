@@ -19,7 +19,7 @@ stages:
 build:
   stage: build
   script:
-    - docker build -f $DOCKER_FILE_PATH -t $CI_REGISTRY/$CI_PROJECT_PATH:latest .
+    - docker build -f $DOCKER_FILE_PATH -t $CI_REGISTRY/$CI_PROJECT_PATH .
   tags:
     - docker
 
@@ -33,7 +33,7 @@ test:
 push:
   stage: push
   script:
-    - docker push $CI_REGISTRY/$CI_PROJECT_PATH:latest
+    - docker push $CI_REGISTRY/$CI_PROJECT_PATH
   tags:
     - docker
 
