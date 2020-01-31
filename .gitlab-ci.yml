@@ -16,17 +16,12 @@ stages:
   - push
   - deploy
 
-.build:
+build:
   stage: build
   script:
-    - docker build --build-arg BUILD_ENV=$BUILD_ENV -f $DOCKER_FILE_PATH -t $CI_REGISTRY/$CI_PROJECT_PATH:latest . 
+    - docker build -f $DOCKER_FILE_PATH -t $CI_REGISTRY/$CI_PROJECT_PATH:latest . 
   tags:
     - docker
-
-build_prod:
-  extends: .build
-  environment:
-    name: prod
 
 test:
   stage: test
