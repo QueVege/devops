@@ -12,30 +12,31 @@ before_script:
 
 stages:
   - build
-  - test
-  - push
+#   - test
+#   - push
   - deploy
 
 build:
   stage: build
   script:
     - docker build -f $DOCKER_FILE_PATH -t $CI_REGISTRY/$CI_PROJECT_PATH .
-  tags:
-    - docker
-
-test:
-  stage: test
-  script: 
-    - echo $CI_JOB_STAGE
-  tags:
-    - docker
-
-push:
-  stage: push
-  script:
     - docker push $CI_REGISTRY/$CI_PROJECT_PATH
   tags:
     - docker
+
+# test:
+#   stage: test
+#   script: 
+#     - echo $CI_JOB_STAGE
+#   tags:
+#     - docker
+
+# push:
+#   stage: push
+#   script:
+#     - docker push $CI_REGISTRY/$CI_PROJECT_PATH
+#   tags:
+#     - docker
 
 
 deploy:
