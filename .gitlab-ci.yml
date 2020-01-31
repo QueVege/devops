@@ -1,7 +1,4 @@
-image: gitlab/dind:latest
-
-services:
-  - docker:dind
+image: docker:stable
 
 variables:
   DOCKER_FILE_PATH: ./app/Dockerfile.prod
