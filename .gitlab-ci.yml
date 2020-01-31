@@ -22,7 +22,7 @@ stages:
   tags:
     - docker
 
-build_dev:
+build_prod:
   extends: .build
   environment:
     name: prod
