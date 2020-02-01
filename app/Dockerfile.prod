@@ -10,9 +10,9 @@ RUN apk update \
 
 RUN pip install --upgrade pip
 
-COPY . /usr/src/app/
+COPY app/ /usr/src/app/
 
-COPY ./requirements.txt .
+COPY app/requirements.txt .
 RUN pip wheel --no-cache-dir --no-deps --wheel-dir /usr/src/app/wheels -r requirements.txt
 
 
@@ -35,9 +35,9 @@ COPY --from=builder /usr/src/app/requirements.txt .
 RUN pip install --upgrade pip
 RUN pip install --no-cache /wheels/*
 
-COPY ./entrypoint.prod.sh $APP_HOME
+COPY app/entrypoint.prod.sh $APP_HOME
 
-COPY . $APP_HOME
+COPY app/ $APP_HOME
 
 RUN chown -R app:app $APP_HOME
 
