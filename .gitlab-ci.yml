@@ -41,7 +41,6 @@ build:
 
 deploy:
   stage: deploy
-
   before_script:
     - apk add --no-cache openssh-client bash
     - mkdir -p ~/.ssh
@@ -51,15 +50,8 @@ deploy:
     - eval "$(ssh-agent -s)"
     - ssh-add ~/.ssh/id_rsa
     - ssh-keyscan -H $DEPLOYMENT_SERVER_IP >> ~/.ssh/known_hosts
-
   script:
-    - mkdir -p ~/dj
-    - scp -r . $DEPLOYMENT_SERVER_USERNAME@$DEPLOYMENT_SERVER_IP:~/dj
-    - cd ~/dj
-    - ssh $DEPLOYMENT_SERVER_USERNAME@$DEPLOYMENT_SERVER_IP "docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY"
-    - ssh $DEPLOYMENT_SERVER_USERNAME@$DEPLOYMENT_SERVER_IP "docker pull $CI_REGISTRY/$CI_PROJECT_PATH"
-    - ssh $DEPLOYMENT_SERVER_USERNAME@$DEPLOYMENT_SERVER_IP "docker-compose -f $DOCKER_COMPOSE_FILE_PATH up -d"
-
+    - bash deploy.sh
   only:
     - master
   tags:
