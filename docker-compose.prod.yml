@@ -10,9 +10,7 @@ services:
     depends_on:
       - web
   web:
-    build:
-      context: ./app
-      dockerfile: Dockerfile.prod
+    image: registry.gitlab.com/hello_group/hello_project:latest
     command: gunicorn dj_proj.wsgi:application --bind 0.0.0.0:8000
     volumes:
       - static_volume:/home/app/web/staticfiles
