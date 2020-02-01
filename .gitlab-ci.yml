@@ -1,61 +1,62 @@
-image: gitlab/dind:latest
+image: docker:18.09.7
 
 services:
-  - docker:dind
+  - docker:18.09.7-dind
+
 
 variables:
-  DOCKER_FILE_PATH: ./app/Dockerfile
+  DOCKER_FILE_PATH: app/Dockerfile.prod
 
 before_script:
   - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
 
 stages:
   - build
-  - test
-  - push
+#   - test
+#   - push
   - deploy
 
-.build:
+build:
   stage: build
   script:
-    - docker build --build-arg BUILD_ENV=$BUILD_ENV -f $DOCKER_FILE_PATH -t $CI_REGISTRY/$CI_PROJECT_PATH:latest . 
+    - docker build -f $DOCKER_FILE_PATH -t $CI_REGISTRY/$CI_PROJECT_PATH .
+    - docker push $CI_REGISTRY/$CI_PROJECT_PATH
   tags:
     - docker
 
-build_dev:
-  extends: .build
-  environment:
-    name: dev
+# test:
+#   stage: test
+#   script: 
+#     - echo $CI_JOB_STAGE
+#   tags:
+#     - docker
 
-test:
-  stage: test
-  script: 
-    - echo $CI_JOB_STAGE
-  tags:
-    - docker
-
-push:
-  stage: push
-  script:
-    - docker push $CI_REGISTRY/$CI_PROJECT_PATH:latest
-  tags:
-    - docker
+# push:
+#   stage: push
+#   script:
+#     - docker push $CI_REGISTRY/$CI_PROJECT_PATH
+#   tags:
+#     - docker
 
 
 deploy:
   stage: deploy
-  before_script:
+
+#   before_script:
+    - apk add --no-cache openssh-client bash
     - mkdir -p ~/.ssh
     - echo "$DEPLOY_SERVER_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
-    - chmod 600 ~/.ssh/id_rsa
-    - 'which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )'
+    - cat ~/.ssh/id_rsa
+    - chmod 700 ~/.ssh/id_rsa
     - eval "$(ssh-agent -s)"
     - ssh-add ~/.ssh/id_rsa
-    - ssh-keyscan -H $DEPLOYMENT_SERVER_IP >> ~/.ssh/known_hosts 
+    - ssh-keyscan -H $DEPLOYMENT_SERVER_IP >> ~/.ssh/known_hosts
+
   script:
-    - ssh $DEPLOYMENT_SERVER_USERNAME@$DEPLOYMENT_SERVER_IP docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY 
-    - ssh $DEPLOYMENT_SERVER_USERNAME@$DEPLOYMENT_SERVER_IP docker pull $CI_REGISTRY/$CI_PROJECT_PATH:latest
+    - ssh $DEPLOYMENT_SERVER_USERNAME@$DEPLOYMENT_SERVER_IP docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
+    - ssh $DEPLOYMENT_SERVER_USERNAME@$DEPLOYMENT_SERVER_IP docker pull $CI_REGISTRY/$CI_PROJECT_PATH
     - ssh $DEPLOYMENT_SERVER_USERNAME@$DEPLOYMENT_SERVER_IP docker-compose -f $DOCKER_COMPOSE_FILE_PATH up -d $CI_PROJECT_NAME
+
   only:
     - master
   tags:
