@@ -56,7 +56,7 @@ deploy:
     - ssh $DEPLOYMENT_SERVER_USERNAME@$DEPLOYMENT_SERVER_IP "cd ~/dj"
     - ssh $DEPLOYMENT_SERVER_USERNAME@$DEPLOYMENT_SERVER_IP "docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY"
     - ssh $DEPLOYMENT_SERVER_USERNAME@$DEPLOYMENT_SERVER_IP "docker pull $CI_REGISTRY/$CI_PROJECT_PATH"
-    - ssh $DEPLOYMENT_SERVER_USERNAME@$DEPLOYMENT_SERVER_IP "docker-compose -f $DOCKER_COMPOSE_FILE_PATH up -d $CI_PROJECT_NAME"
+    - ssh $DEPLOYMENT_SERVER_USERNAME@$DEPLOYMENT_SERVER_IP "docker-compose -f docker-compose.prod.yml up -d $CI_PROJECT_NAME"
   only:
     - master
   tags:
