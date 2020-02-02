@@ -38,21 +38,25 @@ build:
 #   tags:
 #     - docker
 
+before_script:
+  - apk add --no-cache openssh-client bash
+  - mkdir -p ~/.ssh
+  - echo "$DEPLOY_SERVER_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
+  - cat ~/.ssh/id_rsa
+  - chmod 700 ~/.ssh/id_rsa
+  - eval "$(ssh-agent -s)"
+  - ssh-add ~/.ssh/id_rsa
+  - ssh-keyscan -H $DEPLOYMENT_SERVER_IP >> ~/.ssh/known_hosts
 
 deploy:
   artifacts:
       paths:
       - build/
   stage: deploy
-  before_script:
-    - apk add --no-cache openssh-client bash
-    - mkdir -p ~/.ssh
-    - echo "$DEPLOY_SERVER_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
-    - cat ~/.ssh/id_rsa
-    - chmod 700 ~/.ssh/id_rsa
-    - eval "$(ssh-agent -s)"
-    - ssh-add ~/.ssh/id_rsa
-    - ssh-keyscan -H $DEPLOYMENT_SERVER_IP >> ~/.ssh/known_hosts
+  
+  only:
+    - master
+
   script:
     - ssh $DEPLOYMENT_SERVER_USERNAME@$DEPLOYMENT_SERVER_IP "mkdir -p ~/dj"
     - scp -r build/* $DEPLOYMENT_SERVER_USERNAME@$DEPLOYMENT_SERVER_IP:~/dj
@@ -60,7 +64,6 @@ deploy:
     - ssh $DEPLOYMENT_SERVER_USERNAME@$DEPLOYMENT_SERVER_IP "docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY"
     - ssh $DEPLOYMENT_SERVER_USERNAME@$DEPLOYMENT_SERVER_IP "docker pull $CI_REGISTRY/$CI_PROJECT_PATH"
     - ssh $DEPLOYMENT_SERVER_USERNAME@$DEPLOYMENT_SERVER_IP "docker-compose -f $DOCKER_COMPOSE_FILE_PATH up -d $CI_PROJECT_NAME"
-  only:
-    - master
+
   tags:
     - docker
