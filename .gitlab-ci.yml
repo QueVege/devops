@@ -6,14 +6,13 @@ services:
 
 variables:
   DOCKER_FILE_PATH: app/Dockerfile.prod
+  DOCKER_COMPOSE_FILE_PATH: ~/dj/docker-compose.prod.yml
 
 before_script:
   - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
 
 stages:
   - build
-#   - test
-#   - push
   - deploy
 
 build:
@@ -23,21 +22,6 @@ build:
     - docker push $CI_REGISTRY/$CI_PROJECT_PATH
   tags:
     - docker
-
-# test:
-#   stage: test
-#   script: 
-#     - echo $CI_JOB_STAGE
-#   tags:
-#     - docker
-
-# push:
-#   stage: push
-#   script:
-#     - docker push $CI_REGISTRY/$CI_PROJECT_PATH
-#   tags:
-#     - docker
-
 
 deploy:
   stage: deploy
@@ -52,10 +36,16 @@ deploy:
     - ssh-keyscan -H $DEPLOYMENT_SERVER_IP >> ~/.ssh/known_hosts
   script:
     - ssh $DEPLOYMENT_SERVER_USERNAME@$DEPLOYMENT_SERVER_IP "mkdir -p ~/dj"
-    - scp -r ./* $DEPLOYMENT_SERVER_USERNAME@$DEPLOYMENT_SERVER_IP:~/dj
-    - ssh $DEPLOYMENT_SERVER_USERNAME@$DEPLOYMENT_SERVER_IP "docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY"
-    - ssh $DEPLOYMENT_SERVER_USERNAME@$DEPLOYMENT_SERVER_IP "docker pull $CI_REGISTRY/$CI_PROJECT_PATH"
-    - ssh $DEPLOYMENT_SERVER_USERNAME@$DEPLOYMENT_SERVER_IP "docker-compose -f ~/dj/docker-compose.prod.yml up -d $CI_PROJECT_NAME"
+    - rsync -ave ssh . $DEPLOYMENT_SERVER_USERNAME@$DEPLOYMENT_SERVER_IP:~/dj
+    # - scp -r ./* $DEPLOYMENT_SERVER_USERNAME@$DEPLOYMENT_SERVER_IP:~/dj
+    # - ssh $DEPLOYMENT_SERVER_USERNAME@$DEPLOYMENT_SERVER_IP "docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY"
+    # - ssh $DEPLOYMENT_SERVER_USERNAME@$DEPLOYMENT_SERVER_IP "docker pull $CI_REGISTRY/$CI_PROJECT_PATH"
+    # - ssh $DEPLOYMENT_SERVER_USERNAME@$DEPLOYMENT_SERVER_IP "docker-compose -f ~/dj/docker-compose.prod.yml up -d $CI_PROJECT_NAME"
+    - ssh $DEPLOYMENT_SERVER_USERNAME@$DEPLOYMENT_SERVER_IP "docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY;
+    docker-compose -f $DOCKER_COMPOSE_FILE_PATH stop;
+    docker-compose -f $DOCKER_COMPOSE_FILE_PATH rm web --force;
+    docker pull $CI_REGISTRY/$CI_PROJECT_PATH;
+    docker-compose -f $DOCKER_COMPOSE_FILE_PATH up -d"
   only:
     - master
   tags:
